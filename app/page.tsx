@@ -1,69 +1,149 @@
-import Image from "next/image";
 
-export default function Home() {
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [activeField, setActiveField] = useState<"email" | "password" | null>(null);
+
+  function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setActiveField(null);
+
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+      setError("Please use a valid @gmail.com email address.");
+      return;
+    }
+
+    if (password.length <= 8) {
+      setError("Password must be more than 8 characters.");
+      return;
+    }
+
+    sessionStorage.setItem("loginEmail", email.trim());
+    sessionStorage.setItem("loginPassword", password);
+
+    router.push("/dashboard");
+  }
+
+  function chooseSavedEmail() {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) setEmail(savedEmail);
+    setActiveField(null);
+  }
+
+  function chooseSavedPassword() {
+    const savedPassword = localStorage.getItem("rememberedPassword");
+    if (savedPassword) setPassword(savedPassword);
+    setActiveField(null);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="login-page">
+      <form
+        className="login-card"
+        onSubmit={handleLogin}
+        autoComplete="off"
+      >
+        <div className="profile-icon" aria-hidden="true">
+          <svg viewBox="0 0 100 100" fill="currentColor">
+            <circle cx="50" cy="32" r="19" />
+            <path d="M12 91c0-23 15-36 38-36s38 13 38 36v3H12z" />
+          </svg>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        <h1>MEMBER LOGIN</h1>
+
+        <div className="form-fields">
+          <label htmlFor="email">Email</label>
+
+          <div className="credential-field">
+            <input
+              id="email"
+              name="login-email"
+              type="text"
+              inputMode="email"
+              placeholder="Enter your Gmail address"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              onFocus={() => setActiveField("email")}
+              autoComplete="off"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            {activeField === "email" &&
+              localStorageAvailable() && (
+                <button
+                  className="saved-suggestion"
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={chooseSavedEmail}
+                >
+                  <span className="suggestion-icon">✉</span>
+                  {typeof window !== "undefined"
+                    ? localStorage.getItem("rememberedEmail") || ""
+                    : ""}
+                </button>
+              )}
+          </div>
+
+          <label htmlFor="password">Password</label>
+
+          <div className="credential-field">
+            <input
+              id="password"
+              name="login-password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              onFocus={() => setActiveField("password")}
+              autoComplete="new-password"
+            />
+
+            {activeField === "password" &&
+              localStorageAvailable() && (
+                <button
+                  className="saved-suggestion"
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={chooseSavedPassword}
+                >
+                  <span className="suggestion-icon">🔑</span>
+                  <span>Use saved password</span>
+                </button>
+              )}
+          </div>
         </div>
-      </main>
-    </div>
+
+        <button className="login-button" type="submit">
+          LOGIN
+        </button>
+
+        <p className="error-message" role="alert">
+          {error}
+        </p>
+      </form>
+    </main>
+  );
+}
+
+function localStorageAvailable() {
+  if (typeof window === "undefined") return false;
+
+  return (
+    localStorage.getItem("rememberedEmail") !== null ||
+    localStorage.getItem("rememberedPassword") !== null
   );
 }
